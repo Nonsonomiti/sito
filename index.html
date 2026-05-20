@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Martino Cosci</title>
+    <style>
+        /* Azzera i margini e imposta lo schermo intero */
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #000000;
+            color: #ffffff;
+            
+            /* Centra tutto perfettamente a livello verticale e orizzontale */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Stile per la scritta "miti" */
+        h1 {
+            font-size: 6rem; /* Molto grande */
+            font-weight: normal; /* Niente grassetto, più elegante */
+            margin-bottom: 2rem;
+            margin-top: 0;
+        }
+
+        /* Contenitore per i link */
+        .links {
+            display: flex;
+            gap: 2rem; /* Spazio tra una parola e l'altra */
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Stile dei link */
+        a {
+            color: #ffffff;
+            text-decoration: none; /* Toglie la sottolineatura di default */
+            font-size: 1.2rem;
+        }
+
+        /* Quando passi sopra col mouse ai link */
+        a:hover {
+            text-decoration: underline;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>miti</h1>
+
+    <div class="links">
+        <a href="blog.html">blog</a>
+        <a href="#">musica</a>
+        <a href="#">scacchi</a>
+        <a href="#">appunti</a>
+        <a href="#">foto</a>
+        <a href="#">video</a>
+    </div>
+
+</body>
+</html>

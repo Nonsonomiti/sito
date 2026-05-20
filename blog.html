@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>blog - miti</title>
+    <style>
+        body {
+            /* Margine base per non toccare i bordi dello schermo, ma senza esagerare */
+            margin: 2rem 5vw; 
+            background-color: #000000;
+            color: #ffffff;
+            /* Nessun font specificato = usa lo stesso font di default della home */
+        }
+
+        a {
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            font-style: italic;
+        }
+
+        /* Il tasto home */
+        .home-btn {
+            font-size: 1.2rem;
+            display: block;
+            margin-bottom: 2rem;
+        }
+
+        /* La striscia con le date */
+        .dates-strip {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            
+            margin-bottom: 2rem;
+        }
+
+        .dates-strip a {
+            font-size: 1rem;
+            color: red; /* Leggermente grigio per staccare dal testo bianco */
+        }
+
+        .dates-strip a:hover {
+            color: #ea3a3a;
+        }
+
+        /* I post del blog - Spaziature ridotte al minimo */
+        article {
+            margin-bottom: 2.5rem;
+        }
+
+        h2 {
+            font-weight: normal;
+            font-size: 1.5rem;
+            margin: 0 0 0.2rem 0; /* Margini quasi a zero */
+        }
+
+        p {
+            margin: 0;
+            line-height: 1.3; /* Testo più compatto, meno spazio tra le righe */
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="home-btn">home</a>
+
+    <div class="dates-strip">
+        <a href="#20-mag-26">20 Mag 2026</a>
+
+    </div>
+
+    <article id="20-mag-26">
+        <h2>yo</h2>
+        <p> damn </p>
+    </article>
+</body>
+</html>
