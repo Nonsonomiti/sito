@@ -4,62 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>musica - miti</title>
-    <style>
-        body {
-            margin: 2rem 5vw; 
-            background-color: #000000;
-            color: #ffffff;
-            /* Nessun font impostato = usa lo stesso identico della home */
-        }
-
-        /* Sposta il tasto home in alto a destra */
-        .navigation {
-            text-align: right;
-            margin-bottom: 3rem;
-        }
-
-        .home-btn {
-            font-size: 1.2rem;
-            color: #ffffff;
-            text-decoration: none;
-        }
-
-        .home-btn:hover {
-            text-decoration: underline;
-            font-style: italic;
-        }
-
-        /* Il blocco di testo di ogni canzone */
-        .song-block {
-            margin-bottom: 3rem; /* Spazio vuoto tra una canzone e l'altra */
-            line-height: 1.4;    /* Spaziatura di lettura naturale */
-        }
-
-        /* Stile della parolina "link" */
-        .song-block a {
-            color: #ffffff;
-            text-decoration: underline;
-        }
-
-        .song-block a:hover {
-            font-style: italic;
-        }
-    </style>
+    <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
+    <div class="navigation"><a href="index.html" class="home-btn">home</a></div>
+    <div id="content"></div>
 
-    <div class="navigation">
-        <a href="index.html" class="home-btn">home</a>
-    </div>
-
-    <div class="song-block">
-        27/05/2026 Dance With Me - Adam Green <br>
-        <a href="https://youtu.be/5325RtmKpEQ?si=Fqs6RZBks5aoBuhj" target="_blank">link</a>
-    </div>
-    <div class="song-block">
-        31/05/2026 Hug - Weatherday (dall'album Hornet Disaster: da ascoltare tutto, tbh non riuscivo a sceglierne una (infatti linko anche Green Tea Seaweed Sea)) <br>
-        <a href="https://youtu.be/biEgI-QLcVw?si=vD3e1LBqZT43i7ZY" target="_blank">link</a>
-        <a href="https://youtu.be/nTWvr3F2U3c?si=7O0YMC17ljsuPiCg" target="_blank">link</a>
-    </div>
+    <script src="data/musica.js"></script>
+    <script src="assets/render.js"></script>
+    <script>renderMusica(window.MUSICA, document.getElementById("content"));</script>
 </body>
 </html>

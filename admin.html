@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>admin - aggiungi contenuti</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        /* stile solo per questa pagina-strumento */
+        body { max-width: 760px; margin: 2rem auto; padding: 0 1rem; }
+        h1 { font-weight: normal; font-size: 2rem; }
+        .tabs { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+        .tabs button { background: #111; color: #fff; border: 1px solid var(--line);
+            padding: 0.5rem 1rem; cursor: pointer; font-size: 1rem; }
+        .tabs button.active { background: #fff; color: #000; }
+        label { display: block; margin: 1rem 0 0.3rem; color: var(--muted); }
+        input, textarea, select { width: 100%; box-sizing: border-box; background: #111;
+            color: #fff; border: 1px solid var(--line); padding: 0.6rem; font-size: 1rem;
+            font-family: inherit; }
+        textarea { min-height: 140px; resize: vertical; }
+        .btn { margin-top: 1.5rem; background: #fff; color: #000; border: 0;
+            padding: 0.7rem 1.4rem; font-size: 1rem; cursor: pointer; }
+        .btn.secondary { background: #111; color: #fff; border: 1px solid var(--line); }
+        .hint { color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+        .step { border-left: 2px solid var(--line); padding-left: 1rem; margin: 1.5rem 0; }
+        #preview { width: 100%; box-sizing: border-box; min-height: 120px; margin-top: 1rem; }
+        .ok { color: #6f6; }
+        img.thumb { max-width: 200px; display: block; margin-top: 0.5rem; }
+        .row { display: flex; gap: 1rem; }
+        .row > div { flex: 1; }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" style="color:var(--muted)">← home</a>
+    <h1>aggiungi contenuti</h1>
+    <p class="hint">Compila il modulo, premi <b>Aggiungi</b>, poi <b>Scarica file</b>.
+       Metti il file scaricato dentro la cartella <code>data/</code> del sito (sovrascrivi
+       quello vecchio) e caricalo online. Le istruzioni complete sono in <code>GUIDA.md</code>.</p>
+
+    <div class="tabs" id="tabs"></div>
+    <div id="form"></div>
+
+    <div class="step">
+        <button class="btn" onclick="addEntry()">Aggiungi</button>
+        <span id="msg"></span>
+        <label>Anteprima del file (verra' scaricato cosi'):</label>
+        <textarea id="preview" readonly></textarea>
+        <button class="btn secondary" onclick="download()">Scarica file</button>
+        <button class="btn secondary" onclick="copyText()">Copia testo</button>
+    </div>
+
+    <!-- carico i dati esistenti, cosi' le nuove voci si aggiungono a quelle gia' presenti -->
+    <script src="data/blog.js"></script>
+    <script src="data/musica.js"></script>
+    <script src="data/scacchi.js"></script>
+    <script src="data/appunti.js"></script>
+    <script src="data/foto.js"></script>
+    <script src="data/video.js"></script>
+    <script src="assets/render.js"></script>
+    <script>
+    const today = new Date().toISOString().slice(0, 10);
+
+    // definizione delle sezioni: come e' fatto il modulo e come si costruisce la voce
+    const SECTIONS = {
+        blog:    { varName: "BLOG",    file: "data/blog.js",    data: window.BLOG },
+        appunti: { varName: "APPUNTI", file: "data/appunti.js", data: window.APPUNTI },
+        musica:  { varName: "MUSICA",  file: "data/musica.js",  data: window.MUSICA },
+        scacchi: { varName: "SCACCHI", file: "data/scacchi.js", data: window.SCACCHI },
+        foto:    { varName: "FOTO",    file: "data/foto.js",    data: window.FOTO },
+        video:   { varName: "VIDEO",   file: "data/video.js",   data: window.VIDEO },
+    };
+
+    const FORMS = {
+        blog: () => `
+            <label>Data</label><input id="f_date" type="date" value="${today}">
+            <label>Titolo</label><input id="f_title">
+            <label>Testo</label><textarea id="f_body"></textarea>`,
+        appunti: () => FORMS.blog(),
+        musica: () => `
+            <label>Data</label><input id="f_date" type="date" value="${today}">
+            <label>Titolo (es. Canzone - Artista)</label><input id="f_title">
+            <label>Nota (facoltativa)</label><input id="f_note">
+            <label>Link YouTube (uno per riga, anche piu' di uno)</label><textarea id="f_links"></textarea>`,
+        scacchi: () => `
+            <label>Titolo</label><input id="f_title">
+            <label>Descrizione (facoltativa)</label><textarea id="f_body"></textarea>
+            <label>Link (facoltativo)</label><input id="f_link" placeholder="https://...">`,
+        foto: () => `
+            <label>Data</label><input id="f_date" type="date" value="${today}">
+            <label>Didascalia (facoltativa)</label><input id="f_caption">
+            <label>Scegli l'immagine dal computer</label><input id="f_file" type="file" accept="image/*">
+            <img id="f_thumb" class="thumb" style="display:none">
+            <p class="hint">L'immagine viene rimpicciolita e inserita dentro il file: non devi gestire altri file.</p>`,
+        video: () => `
+            <label>Data</label><input id="f_date" type="date" value="${today}">
+            <label>Titolo (facoltativo)</label><input id="f_title">
+            <label>Link YouTube</label><input id="f_youtube" placeholder="https://youtu.be/...">`,
+    };
+
+    let current = "blog";
+    let pendingImage = "";
+
+    function renderTabs() {
+        document.getElementById("tabs").innerHTML = Object.keys(SECTIONS).map(k =>
+            `<button class="${k===current?'active':''}" onclick="select('${k}')">${k}</button>`).join("");
+    }
+
+    function select(k) {
+        current = k;
+        pendingImage = "";
+        renderTabs();
+        document.getElementById("form").innerHTML = FORMS[k]();
+        document.getElementById("preview").value = "";
+        document.getElementById("msg").textContent = "";
+        if (k === "foto") hookImage();
+    }
+
+    function hookImage() {
+        document.getElementById("f_file").addEventListener("change", e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const img = new Image();
+                img.onload = () => {
+                    const max = 1600;
+                    let { width, height } = img;
+                    if (width > max || height > max) {
+                        const r = Math.min(max / width, max / height);
+                        width = Math.round(width * r); height = Math.round(height * r);
+                    }
+                    const c = document.createElement("canvas");
+                    c.width = width; c.height = height;
+                    c.getContext("2d").drawImage(img, 0, 0, width, height);
+                    pendingImage = c.toDataURL("image/jpeg", 0.85);
+                    const t = document.getElementById("f_thumb");
+                    t.src = pendingImage; t.style.display = "block";
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function val(id) { const el = document.getElementById(id); return el ? el.value.trim() : ""; }
+
+    function buildEntry() {
+        switch (current) {
+            case "blog": case "appunti":
+                if (!val("f_title")) return null;
+                return { date: val("f_date"), title: val("f_title"), body: document.getElementById("f_body").value };
+            case "musica":
+                if (!val("f_title")) return null;
+                return { date: val("f_date"), title: val("f_title"), note: val("f_note"),
+                    links: val("f_links").split("\n").map(s => s.trim()).filter(Boolean) };
+            case "scacchi":
+                if (!val("f_title")) return null;
+                return { title: val("f_title"), body: document.getElementById("f_body").value, link: val("f_link") };
+            case "foto":
+                if (!pendingImage) return null;
+                return { date: val("f_date"), caption: val("f_caption"), src: pendingImage };
+            case "video":
+                if (!val("f_youtube")) return null;
+                return { date: val("f_date"), title: val("f_title"), youtube: val("f_youtube") };
+        }
+    }
+
+    function addEntry() {
+        const entry = buildEntry();
+        const msg = document.getElementById("msg");
+        if (!entry) { msg.innerHTML = ' <span style="color:#f66">manca un campo obbligatorio</span>'; return; }
+        SECTIONS[current].data.push(entry);
+        msg.innerHTML = ' <span class="ok">aggiunto ✓ ora scarica il file</span>';
+        refreshPreview();
+    }
+
+    function fileText() {
+        const s = SECTIONS[current];
+        return `window.${s.varName} = ` + JSON.stringify(s.data, null, 2) + ";\n";
+    }
+
+    function refreshPreview() {
+        const t = fileText();
+        // per le foto il base64 e' enorme: non lo mostro tutto nell'anteprima
+        document.getElementById("preview").value =
+            t.length > 4000 ? t.slice(0, 2000) + "\n\n...[testo lungo, premi Scarica file]..." : t;
+    }
+
+    function download() {
+        const s = SECTIONS[current];
+        const blob = new Blob([fileText()], { type: "text/javascript" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = s.file.split("/").pop();
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+
+    function copyText() {
+        navigator.clipboard.writeText(fileText());
+        document.getElementById("msg").innerHTML = ' <span class="ok">copiato ✓</span>';
+    }
+
+    select("blog");
+    </script>
+</body>
+</html>
