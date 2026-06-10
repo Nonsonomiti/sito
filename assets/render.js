@@ -37,6 +37,12 @@ function escapeHtml(s) {
     return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/* escapa l'html e trasforma i link in <a> cliccabili, su una nuova riga */
+function linkify(s) {
+    return escapeHtml(s).replace(/(https?:\/\/[^\s]+)/g, url =>
+        `<br><a href="${url}" target="_blank">${url}</a>`);
+}
+
 /* --- BLOG e APPUNTI (stessa struttura) --- */
 function renderBlog(entries, root) {
     if (!entries || !entries.length) { root.innerHTML = '<p class="empty">ancora niente qui.</p>'; return; }
@@ -52,7 +58,7 @@ function renderBlog(entries, root) {
         return `<article id="${id}">
             <h2>${escapeHtml(e.title)}</h2>
             ${e.date ? `<p class="meta">${formatDate(e.date)}</p>` : ""}
-            <p>${escapeHtml(e.body)}</p>
+            <p>${linkify(e.body)}</p>
         </article>`;
     }).join("");
 
