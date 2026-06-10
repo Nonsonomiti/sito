@@ -105,6 +105,16 @@ article p {
     margin-bottom: 3rem;
 }
 
+.song-block .meta {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0 0 0.4rem 0;
+}
+
+.song-block p {
+    margin: 0 0 0.4rem 0;
+}
+
 .song-block a {
     text-decoration: underline;
 }

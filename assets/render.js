@@ -75,7 +75,8 @@ function renderMusica(entries, root) {
             `<a href="${u}" target="_blank">link</a>`).join(" ");
         const note = e.note ? " " + escapeHtml(e.note) : "";
         return `<div class="song-block">
-            ${formatDate(e.date)} ${escapeHtml(e.title)}${note} <br>
+            ${e.date ? `<p class="meta">${formatDate(e.date)}</p>` : ""}
+            <p>${escapeHtml(e.title)}${note}</p>
             ${links}
         </div>`;
     }).join("");
