@@ -23,5 +23,13 @@ window.MUSICA = [
     "links": [
       "https://youtu.be/85PeF_yBlt4?si=7qCNCfgVEFiKc6ah"
     ]
+  },
+  {
+    "date": "2026-07-22",
+    "title": "Modern Baseball - The Thrash Particle",
+    "note": "MoBo <3",
+    "links": [
+      "https://youtu.be/EQ7NOmRKuAE?si=gBO27afWKIMgYMd3"
+    ]
   }
 ];
