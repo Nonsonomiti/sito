@@ -73,10 +73,11 @@ function renderMusica(entries, root) {
     root.innerHTML = list.map(e => {
         const links = (e.links || []).map(u =>
             `<a href="${u}" target="_blank">link</a>`).join(" ");
-        const note = e.note ? " " + escapeHtml(e.note) : "";
+        const note = e.note ? `<p>${escapeHtml(e.note)}</p>` : "";
         return `<div class="song-block">
             ${e.date ? `<p class="meta">${formatDate(e.date)}</p>` : ""}
-            <p>${escapeHtml(e.title)}${note}</p>
+            <p>${escapeHtml(e.title)}</p>
+            ${note}
             ${links}
         </div>`;
     }).join("");
