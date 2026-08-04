@@ -31,5 +31,13 @@ window.MUSICA = [
     "links": [
       "https://youtu.be/EQ7NOmRKuAE?si=gBO27afWKIMgYMd3"
     ]
+  },
+  {
+    "date": "2026-08-04",
+    "title": "Door Selection - i cani -- Il sorprendente album d'esordio de I Cani",
+    "note": "la pretesa che tutto questo avrà un senso il mattino seguente",
+    "links": [
+      "https://youtu.be/bOh2AJylJPM?si=-ViUX-V58JH9l5V3"
+    ]
   }
 ];
