@@ -187,14 +187,23 @@ article p {
     font-size: 1.15em;
 }
 
-.song-block a {
+/* link non-YouTube */
+.song-block > a {
     margin-right: 0.8rem;
     text-decoration-line: underline;
     text-decoration-color: var(--muted);
 }
 
-.song-block a:hover {
+.song-block > a:hover {
     text-decoration-color: currentColor;
+}
+
+/* anteprime YouTube: due per riga nella colonna */
+.song-videos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(14rem, 100%), 1fr));
+    gap: 0.75rem;
+    margin: 0.8rem 0 0.3rem 0;
 }
 
 /* --- SCACCHI / repo --- */
@@ -358,16 +367,16 @@ body:has(#lightbox[open]) {
 }
 
 .video-embed[data-id]::before {
-    width: 4.5rem;
-    height: 4.5rem;
+    width: 3.5rem;
+    height: 3.5rem;
     border-radius: 50%;
     background: color-mix(in srgb, var(--bg) 65%, transparent);
 }
 
 .video-embed[data-id]::after {
-    width: 1.3rem;
-    height: 1.5rem;
-    translate: 0.15rem 0;
+    width: 1rem;
+    height: 1.15rem;
+    translate: 0.12rem 0;
     background: var(--fg);
     clip-path: polygon(0 0, 100% 50%, 0 100%);
 }

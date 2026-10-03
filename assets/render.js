@@ -66,22 +66,26 @@ function renderBlog(entries, root) {
     root.innerHTML = `<div class="dates-strip">${strip}</div>${articles}`;
 }
 
-/* --- MUSICA --- */
+/* --- MUSICA ---
+   i link di YouTube diventano anteprime che si ascoltano qui; gli altri restano "link" */
 function renderMusica(entries, root) {
     if (!entries || !entries.length) { root.innerHTML = '<p class="empty">ancora niente qui.</p>'; return; }
     const list = entries.slice().sort(byDateDesc);
 
     root.innerHTML = list.map(e => {
-        const links = (e.links || []).map(u =>
+        const yt = (e.links || []).filter(u => /youtu/.test(u));
+        const links = (e.links || []).filter(u => !/youtu/.test(u)).map(u =>
             `<a href="${u}" target="_blank">link</a>`).join(" ");
         const note = e.note ? `<p>${escapeHtml(e.note)}</p>` : "";
         return `<div class="song-block">
             ${e.date ? `<p class="meta">${formatDate(e.date)}</p>` : ""}
             <p>${escapeHtml(e.title)}</p>
             ${note}
+            ${yt.length ? `<div class="song-videos">${yt.map(u => ytEmbed(youtubeId(u))).join("")}</div>` : ""}
             ${links}
         </div>`;
     }).join("");
+    hookYt(root);
 }
 
 /* --- SCACCHI (progetti / repo) --- */
@@ -196,18 +200,25 @@ function renderVideo(entries, root) {
     if (!entries || !entries.length) { root.innerHTML = '<p class="empty">ancora niente qui.</p>'; return; }
     const list = entries.slice().sort(byDateDesc);
 
-    root.innerHTML = `<div class="video-list">` + list.map(e => {
-        const id = youtubeId(e.youtube);
-        return `<div class="video-item">
-            <a class="video-embed" href="https://youtu.be/${id}" data-id="${id}" aria-label="guarda il video">
-                <img src="https://i.ytimg.com/vi/${id}/maxresdefault.jpg" alt="" loading="lazy"
-                    onload="ytThumb(this)" onerror="ytThumb(this)">
-            </a>
+    root.innerHTML = `<div class="video-list">` + list.map(e => `
+        <div class="video-item">
+            ${ytEmbed(youtubeId(e.youtube))}
             ${e.title ? `<h2>${escapeHtml(e.title)}</h2>` : ""}
             ${e.date ? `<p class="meta">${formatDate(e.date)}</p>` : ""}
-        </div>`;
-    }).join("") + `</div>`;
+        </div>`).join("") + `</div>`;
+    hookYt(root);
+}
 
+/* miniatura col tasto play (usata da video e musica) */
+function ytEmbed(id) {
+    return `<a class="video-embed" href="https://youtu.be/${id}" data-id="${id}" aria-label="guarda il video">
+        <img src="https://i.ytimg.com/vi/${id}/maxresdefault.jpg" alt="" loading="lazy"
+            onload="ytThumb(this)" onerror="ytThumb(this)">
+    </a>`;
+}
+
+/* al click la miniatura diventa il player vero */
+function hookYt(root) {
     root.querySelectorAll("a[data-id]").forEach(a => a.onclick = ev => {
         ev.preventDefault();
         a.outerHTML = `<div class="video-embed"><iframe src="https://www.youtube-nocookie.com/embed/${a.dataset.id}?autoplay=1"
