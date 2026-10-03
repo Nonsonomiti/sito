@@ -1,4 +1,5 @@
-/* Le foto. Ogni voce: { date, caption, src }
-   - src: di solito l'immagine viene incorporata da admin.html (testo lunghissimo
-     che inizia con "data:image..."), oppure il nome di un file dentro /foto. */
+/* Le foto. Ogni voce: { date, caption, serie, src, mini, w, h }
+   - serie: facoltativa; le foto con lo stesso nome di serie formano un gruppo
+   - src / mini: foto grande e miniatura, file dentro /foto (li crea admin.html)
+   - w / h: misure della foto grande */
 window.FOTO = [];
