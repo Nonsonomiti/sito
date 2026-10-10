@@ -8,5 +8,10 @@ window.BLOG = [
     "date": "2026-07-30",
     "title": "House S3E12",
     "body": "- If I die in peace, then I'm just another patient. But if I die suffering --\n- It'll be horrible. Don't do that do either of us.\n- No, I just need to die knowing that something is different because I was here."
+  },
+  {
+    "date": "2026-10-10",
+    "title": "numb your brain to feel alive",
+    "body": "è controintuivo come l'unico modo che ho di non stare attivamente male sia riempirmi di così tante cose da fare, o che mi capitano da fare, a tal punto da non avere ne tempo ne energie mentali per stare da solo con me stesso. è normale fare inconsciamente di tutto pur di non stare da soli con se stessi? la disperazione mi sopraggiunge ogni volta che non ho qualcosa di estremamente ben specificato da dover fare. quando mi riposo mi sento in colpa, in quanto sto male, e perdo tempo. non so bene cosa rispondermi - tuttavia questa non è una cosa cattiva. nonostante siano state settimane molto piene queste ultime, non posso certo dire siano state le peggiori degli ultimi mesi. \nè probabilmente complice l'essere dovuto stare una settimana senza medicine, ma non voglio dare troppo peso a ciò. sarebbe troppo facile. "
   }
 ];
