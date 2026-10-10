@@ -39,5 +39,13 @@ window.MUSICA = [
     "links": [
       "https://youtu.be/bOh2AJylJPM?si=-ViUX-V58JH9l5V3"
     ]
+  },
+  {
+    "date": "2026-10-10",
+    "title": "Rock 'n' Roll Suicide - David Bowie -- The Rise and Fall of Ziggy Stardust and the Spiders from Mars",
+    "note": "\"Oh no, love, you're not alone; You're watching yourself, but you're too unfair; You got your head all tangled up, but if I could only make you care\"",
+    "links": [
+      "https://youtu.be/SOgVoxqKU7U?si=kiPC3klJYECfyg5H"
+    ]
   }
 ];
