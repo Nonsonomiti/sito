@@ -51,7 +51,7 @@ window.MUSICA = [
   {
     "date": "2026-11-04",
     "title": "Agony - Yung Lean",
-    "note": "Take a pill and go to sleep; I'm chasing witches in the street; I'm the last page in your book; Can't write a song only do hooks; Watching horses in the fields; The dragon rests in agony; When I'm afraid I lose my mind; It's fine it happens all the time",
+    "note": "\"When I'm afraid I lose my mind; It's fine it happens all the time\"",
     "links": [
       "https://youtu.be/hEWPmWprx7Y?si=BVln_9-MFXF-E82j"
     ]
