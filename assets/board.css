@@ -79,7 +79,7 @@ body.desk {
 .nome {
     position: absolute; left: 50%; bottom: var(--pt);
     transform: translate(-50%, var(--dy, 0px));
-    height: var(--chip); padding: 0 var(--s2);
+    height: var(--chip); padding: 0 var(--pp);
     line-height: var(--chip); white-space: nowrap;
     background: var(--paper); color: var(--ink);
     box-shadow: 0 0 0 1px var(--ink);
@@ -136,6 +136,7 @@ body.desk {
     flex: 1; min-height: 0; overflow: auto;
     padding: var(--s5) var(--s5) var(--s6);
     overflow-wrap: anywhere;
+    font-family: var(--font); font-size: 17px; line-height: 1.45;   /* testo: Newsreader; titoli, barre ed etichette restano a pixel */
     scrollbar-color: var(--ink) var(--paper);
 }
 .win-body:focus-visible { outline-offset: -4px; outline-style: dotted; }
@@ -148,8 +149,12 @@ body.desk {
 
 .win-body a { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .win-body a:hover { background: var(--ink); color: var(--paper); text-decoration: none; }
+.win-body h2, .t, .back, .win-body a.back { font-family: var(--pixel); }
 .win-body h2 { margin: 0; font-size: 24px; line-height: 1.15; }
 .win-body p { margin: 0; }
+
+/* testo un po' ruvido: i bordi sfumati dei caratteri diventano accesi o spenti (filtro in index.html) */
+.win-body :is(.n, .d, .meta, .url, .text, .empty p, figcaption, .empty-txt) { filter: url(#aspro); }
 
 /* ---------- elenchi ---------- */
 .rows { margin: 0; padding: 0; list-style: none; border: 1px solid var(--ink); }
@@ -240,6 +245,7 @@ body.desk {
 /* ---------- telefono: finestre a tutto schermo, una alla volta ---------- */
 @media (max-width: 720px) {
     body.desk { --cw: 16px; }
+    .frame { grid-template: 0 auto var(--cw) / var(--cw) auto 0; }
     .frame { font-size: 12px; }
     .win { inset: 0 !important; width: auto !important; height: auto !important; border-width: 0; box-shadow: none; z-index: 20 !important; }
     .titlebar { height: 40px; }
