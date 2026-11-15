@@ -1,0 +1,251 @@
+/* ============================================================
+   LA SCACCHIERA: 1 bit, due colori.
+   board.js imposta --u (un "pixel" del disegno, in px dello schermo: 1 o 2,
+   sempre un numero intero di pixel fisici), --sq (lato di una casa),
+   --fs / --chip (font e altezza delle etichette) e --pt (aria sopra il pezzo).
+   ============================================================ */
+
+body.desk {
+    --cw: 24px;                      /* margine con lettere e numeri */
+    max-width: none;
+    height: 100dvh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: var(--pixel);
+    font-size: 16px;
+    line-height: 1.25;
+    -webkit-font-smoothing: none;
+    scrollbar-color: var(--ink) var(--paper);
+}
+
+.sr {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; margin: 0;
+}
+
+#fondo { position: fixed; inset: 0; image-rendering: pixelated; }
+.stage { position: fixed; inset: 0; display: grid; place-items: center; }
+
+/* ---------- scacchiera ---------- */
+.frame {
+    display: grid;
+    grid-template: var(--cw) auto var(--cw) / var(--cw) auto var(--cw);
+    font-size: 15px;
+}
+
+.ranks { grid-area: 2 / 1; display: grid; grid-template-rows: repeat(8, var(--sq)); padding-top: 1px; }
+.files { grid-area: 3 / 2; display: grid; grid-template-columns: repeat(8, var(--sq)); padding-left: 1px; }
+.ranks, .files { align-items: center; justify-items: center; }
+.ranks span, .files span { padding: 0 var(--s1); background: var(--paper); }
+
+.bd {
+    grid-area: 2 / 2;
+    position: relative;
+    width: calc(8 * var(--sq));
+    height: calc(8 * var(--sq));
+    box-sizing: content-box;
+    border: 1px solid var(--ink);
+}
+
+#cv { display: block; image-rendering: pixelated; }
+
+.board { position: absolute; inset: 0; }
+
+/* ---------- pezzi ---------- */
+.piece {
+    position: absolute;
+    width: var(--sq); height: var(--sq);
+    padding: 0; border: 0; border-radius: 0;
+    background: none; color: var(--ink);
+    font: inherit; font-size: var(--fs);
+    cursor: pointer;
+}
+
+.pc {
+    position: absolute; left: 50%; top: var(--pt);
+    width: calc(32 * var(--u)); height: calc(32 * var(--u));
+    margin-left: calc(-16 * var(--u));
+    pointer-events: none;
+}
+
+.w .f { fill: var(--lt); }
+.w .l { fill: var(--dk); }
+.b .f { fill: var(--dk); }
+.b .l { fill: var(--lt); }
+.pc .r { fill: var(--dk); }
+
+/* il nome: un'etichetta piena, sempre visibile */
+.nome {
+    position: absolute; left: 50%; bottom: var(--pt);
+    transform: translate(-50%, var(--dy, 0px));
+    height: var(--chip); padding: 0 var(--s2);
+    line-height: var(--chip); white-space: nowrap;
+    background: var(--paper); color: var(--ink);
+    box-shadow: 0 0 0 1px var(--ink);
+}
+
+/* sopra: la casa si svuota e prende una cornice, il pezzo si alza a scatti */
+.piece:hover, .piece:focus-visible, .piece.on { outline: 1px solid var(--ink); outline-offset: calc(-4 * var(--u)); }
+.piece:hover, .piece:focus-visible { background: var(--paper); }
+.piece:focus-visible { outline-width: 2px; }
+.piece.on { outline-style: dashed; }
+.piece:hover .pc, .piece:focus-visible .pc { transform: translateY(calc(-2 * var(--u))); }
+.piece:hover .nome, .piece:focus-visible .nome { background: var(--ink); color: var(--paper); }
+
+/* ---------- finestre ---------- */
+.win {
+    position: fixed; z-index: 10;
+    display: flex; flex-direction: column;
+    background: var(--paper); color: var(--ink);
+    border: 1px solid var(--ink);
+    box-shadow: 1px 1px 0 var(--ink), 2px 2px 0 var(--ink);
+    min-width: 0;
+}
+
+.titlebar {
+    flex: none; height: 21px;
+    display: flex; align-items: center;
+    padding: 0 var(--s2);
+    border-bottom: 1px solid var(--ink);
+    cursor: default; touch-action: none;
+}
+
+.win.attiva .titlebar {
+    background: repeating-linear-gradient(to bottom, var(--ink) 0 1px, var(--paper) 1px 3px);
+    background-position: 0 1px;
+}
+
+.titolo {
+    margin: 0 auto; padding: 0 var(--s3);
+    font-size: 16px; font-weight: normal; line-height: 21px;
+    background: var(--paper);
+    position: relative; left: -10px; /* ricentra il titolo rispetto alla finestra */
+}
+
+.chiudi {
+    flex: none; position: relative; z-index: 1;
+    width: 24px; height: 21px; padding: 0;
+    background: var(--paper); border: 0; cursor: pointer;
+}
+.chiudi::before { content: ""; position: absolute; inset: 5px 6px; border: 1px solid var(--ink); background: var(--paper); }
+.chiudi:hover::before, .chiudi:focus-visible::before { background: var(--ink); }
+.chiudi:focus-visible { outline-offset: -3px; }
+
+.win-body {
+    flex: 1; min-height: 0; overflow: auto;
+    padding: var(--s5) var(--s5) var(--s6);
+    overflow-wrap: anywhere;
+    scrollbar-color: var(--ink) var(--paper);
+}
+.win-body:focus-visible { outline-offset: -4px; outline-style: dotted; }
+
+/* il rettangolo tratteggiato che si allarga dalla casa alla finestra */
+.zoom {
+    position: fixed; z-index: 9999; pointer-events: none;
+    border: 1px dashed var(--ink); outline: 1px dashed var(--paper);
+}
+
+.win-body a { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.win-body a:hover { background: var(--ink); color: var(--paper); text-decoration: none; }
+.win-body h2 { margin: 0; font-size: 24px; line-height: 1.15; }
+.win-body p { margin: 0; }
+
+/* ---------- elenchi ---------- */
+.rows { margin: 0; padding: 0; list-style: none; border: 1px solid var(--ink); }
+.rows > li + li { border-top: 1px solid var(--ink); }
+
+.item {
+    display: grid; grid-template-columns: 1fr auto; align-items: baseline;
+    gap: var(--s1) var(--s4);
+    padding: var(--s2) var(--s3);
+}
+.win-body a.item { text-decoration: none; }
+.win-body a.item:hover { background: var(--ink); color: var(--paper); }
+
+.t { font-size: 18px; line-height: 1.25; text-wrap: balance; }
+.d, .meta { font-size: 15px; text-align: right; white-space: nowrap; }
+.n { grid-column: 1 / -1; line-height: 1.35; white-space: pre-line; }
+.url { font-size: 15px; }
+.vids {
+    grid-column: 1 / -1; margin-top: var(--s2);
+    display: grid; gap: var(--s3);
+    grid-template-columns: repeat(auto-fill, minmax(min(12rem, 100%), 1fr));
+}
+
+.back, .win-body a.back {
+    display: inline-block; margin-bottom: var(--s4);
+    padding: var(--s1) var(--s3);
+    border: 1px solid var(--ink); text-decoration: none;
+    font-size: 15px;
+}
+
+/* ---------- post: l'unico testo in serif ---------- */
+.post h2 { font-size: 24px; }
+.post .meta { margin: var(--s2) 0 var(--s5); text-align: left; }
+.post .text {
+    max-width: 34em;
+    font-family: var(--font); font-size: 18px; line-height: 1.6;
+    white-space: pre-line;
+}
+
+/* ---------- foto ---------- */
+.foto-indice { columns: 10rem; column-gap: var(--s4); }
+.foto-item { margin: 0 0 var(--s4); break-inside: avoid; }
+.foto-item img { display: block; width: 100%; height: auto; border: 1px solid var(--ink); }
+.foto-item figcaption { margin-top: var(--s2); font-size: 15px; }
+.serie-title { margin: 0 0 var(--s5) !important; }
+.foto-serie { display: grid; gap: var(--s6); }
+.foto-serie .foto-item { margin: 0; }
+.foto-serie img { max-height: 70vh; object-fit: contain; }
+.empty-txt { margin: 0; }
+
+#lightbox[open] {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s3);
+    width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: var(--s4);
+    border: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--pixel);
+}
+#lightbox img { max-width: 100%; max-height: calc(100% - var(--s6)); cursor: pointer; border: 1px solid var(--ink); }
+#lightbox p { margin: 0; font-size: 15px; }
+
+/* ---------- video ---------- */
+.video-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr)); gap: var(--s5) var(--s4); }
+.video-item .t { margin: var(--s2) 0 0; }
+.video-item .meta { margin: 0; text-align: left; }
+
+.video-embed { position: relative; display: block; aspect-ratio: 16 / 9; background: var(--paper); border: 1px solid var(--ink); }
+.video-embed img, .video-embed iframe { display: block; width: 100%; height: 100%; object-fit: cover; border: 0; }
+.video-embed img { filter: grayscale(1) contrast(1.15); }
+/* tasto play: quadrato con triangolo */
+.video-embed[data-id]::before, .video-embed[data-id]::after { content: ""; position: absolute; inset: 0; margin: auto; }
+.video-embed[data-id]::before { width: 48px; height: 36px; background: var(--paper); border: 1px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); }
+.video-embed[data-id]::after { width: 12px; height: 16px; translate: 2px 0; background: var(--ink); clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.video-embed[data-id]:hover::before { background: var(--ink); }
+.video-embed[data-id]:hover::after { background: var(--paper); }
+.win-body a.video-embed:hover { background: var(--paper); text-decoration: none; }
+.video-embed:focus-visible { outline-offset: 4px; }
+
+/* ---------- vuoto ---------- */
+.empty {
+    display: flex; flex-direction: column; align-items: center; gap: var(--s3);
+    padding: var(--s6) var(--s4);
+    border: 1px dashed var(--ink);
+    text-align: center;
+}
+.empty .pc { position: static; margin: 0; width: 32px; height: 32px; }
+
+.nojs { padding: var(--s4); }
+
+/* ---------- telefono: finestre a tutto schermo, una alla volta ---------- */
+@media (max-width: 720px) {
+    body.desk { --cw: 16px; }
+    .frame { font-size: 12px; }
+    .win { inset: 0 !important; width: auto !important; height: auto !important; border-width: 0; box-shadow: none; z-index: 20 !important; }
+    .titlebar { height: 40px; }
+    .titolo { line-height: 40px; }
+    .chiudi { width: 44px; height: 40px; }
+    .chiudi::before { inset: 14px 16px; }
+    .win-body { padding: var(--s4) var(--s4) var(--s6); }
+    .back, .win-body a.back { padding: var(--s2) var(--s3); }
+}

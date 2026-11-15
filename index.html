@@ -4,20 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Martino Cosci</title>
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/board.css">
 </head>
-<body class="home">
+<body class="desk">
+    <canvas id="fondo" aria-hidden="true"></canvas>
+    <h1 class="sr">miti</h1>
 
-    <h1>miti</h1>
+    <main class="stage">
+        <div class="frame">
+            <div class="ranks" aria-hidden="true"></div>
+            <div class="bd">
+                <canvas id="cv" aria-hidden="true"></canvas>
+                <div class="board" id="board" role="group" aria-label="scacchiera"></div>
+            </div>
+            <div class="files" aria-hidden="true"></div>
+        </div>
+        <noscript><p class="nojs">la scacchiera ha bisogno di javascript.</p></noscript>
+    </main>
 
-    <div class="links">
-        <a href="blog.html">blog</a>
-        <a href="musica.html">musica</a>
-        <a href="scacchi.html">scacchi</a>
-        <a href="appunti.html">appunti</a>
-        <a href="foto.html">foto</a>
-        <a href="video.html">video</a>
-    </div>
-
+    <script src="data/blog.js"></script>
+    <script src="data/musica.js"></script>
+    <script src="data/scacchi.js"></script>
+    <script src="data/appunti.js"></script>
+    <script src="data/foto.js"></script>
+    <script src="data/video.js"></script>
+    <script src="data/about.js"></script>
+    <script src="assets/render.js"></script>
+    <script src="assets/posizione.js"></script>
+    <script src="assets/board.js"></script>
 </body>
 </html>

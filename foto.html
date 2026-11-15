@@ -4,14 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>foto - miti</title>
-    <link rel="stylesheet" href="assets/style.css">
+    <noscript><meta http-equiv="refresh" content="0;url=index.html#foto"></noscript>
+    <script>
+        /* vecchio indirizzo foto.html?serie=nome -> index.html#foto/nome */
+        var s = new URLSearchParams(location.search).get("serie");
+        location.replace("index.html#foto" + (s ? "/" + encodeURIComponent(s) : ""));
+    </script>
 </head>
-<body>
-    <a href="index.html" class="home-btn">home</a>
-    <div id="content"></div>
-
-    <script src="data/foto.js"></script>
-    <script src="assets/render.js"></script>
-    <script>renderFoto(window.FOTO, document.getElementById("content"));</script>
-</body>
+<body><a href="index.html#foto">foto</a></body>
 </html>

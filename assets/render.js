@@ -2,6 +2,9 @@
    MOTORE DI RENDERING
    Prende i dati dai file in /data e li trasforma in HTML.
    NON serve modificare questo file per aggiungere contenuti.
+   Ogni renderXxx(dati, contenitore, sezione, sotto) disegna dentro una
+   finestra della scacchiera; "sotto" e' la parte dopo la / nell'indirizzo
+   (#blog/id-del-post, #foto/nome-serie).
    ============================================================ */
 
 const MESI = ["gen", "feb", "mar", "apr", "mag", "giu",
@@ -41,84 +44,91 @@ function escapeHtml(s) {
 /* escapa l'html e trasforma i link in <a> cliccabili, su una nuova riga */
 function linkify(s) {
     return escapeHtml(s).replace(/(https?:\/\/[^\s]+)/g, url =>
-        `<br><a href="${url}" target="_blank">${url}</a>`);
+        `<br><a href="${url}" target="_blank" rel="noopener">${url}</a>`);
 }
 
-/* --- BLOG e APPUNTI (stessa struttura) --- */
-function renderBlog(entries, root) {
-    if (!entries || !entries.length) { root.innerHTML = '<p class="empty">ancora niente qui.</p>'; return; }
+function vuoto(root) {
+    root.innerHTML = '<div class="empty"><p>ancora niente qui.</p></div>';
+}
+
+/* riga di un elenco: titolo a sinistra, data a destra, nota sotto */
+function riga(titolo, data, nota, href) {
+    const inner = `<span class="t">${titolo}</span><span class="d">${data}</span>${nota ? `<span class="n">${nota}</span>` : ""}`;
+    return href ? `<a class="item" href="${href}">${inner}</a>` : `<div class="item">${inner}</div>`;
+}
+
+/* --- BLOG: elenco di righe; un clic apre il post nella stessa finestra --- */
+function renderBlog(entries, root, sect, sub) {
+    if (!entries || !entries.length) return vuoto(root);
     const list = entries.slice().sort(byDateDesc);
+    const idOf = e => e.id || slug(e.date + "-" + e.title);
+    const e = list.find(x => idOf(x) === sub);
 
-    const strip = list.map(e => {
-        const id = e.id || slug(e.date + "-" + e.title);
-        return `<a href="#${id}">${formatDate(e.date) || escapeHtml(e.title)}</a>`;
-    }).join("");
-
-    const articles = list.map(e => {
-        const id = e.id || slug(e.date + "-" + e.title);
-        return `<article id="${id}">
+    if (e) {
+        root.innerHTML = `<article class="post">
+            <a class="back" href="#${sect}">&larr; ${sect}</a>
             <h2>${escapeHtml(e.title)}</h2>
             ${e.date ? `<p class="meta">${formatDate(e.date)}</p>` : ""}
-            <p>${linkify(e.body)}</p>
+            <p class="text">${linkify(e.body)}</p>
         </article>`;
-    }).join("");
+        return;
+    }
+    root.innerHTML = `<ul class="rows">` + list.map(x =>
+        `<li>${riga(escapeHtml(x.title), formatDate(x.date), "", "#" + sect + "/" + encodeURIComponent(idOf(x)))}</li>`).join("") + `</ul>`;
+}
 
-    root.innerHTML = `<div class="dates-strip">${strip}</div>${articles}`;
+/* --- APPUNTI: voci brevi, il testo sta gia' nella riga --- */
+function renderAppunti(entries, root) {
+    if (!entries || !entries.length) return vuoto(root);
+    root.innerHTML = `<ul class="rows">` + entries.map(e =>
+        `<li>${riga(escapeHtml(e.title), formatDate(e.date), e.body ? linkify(e.body).replace(/^<br>/, "") : "")}</li>`).join("") + `</ul>`;
 }
 
 /* --- MUSICA ---
    i link di YouTube diventano anteprime che si ascoltano qui; gli altri restano "link" */
 function renderMusica(entries, root) {
-    if (!entries || !entries.length) { root.innerHTML = '<p class="empty">ancora niente qui.</p>'; return; }
+    if (!entries || !entries.length) return vuoto(root);
     const list = entries.slice().sort(byDateDesc);
 
-    root.innerHTML = list.map(e => {
+    root.innerHTML = `<ul class="rows">` + list.map(e => {
         const yt = (e.links || []).filter(u => /youtu/.test(u));
         const links = (e.links || []).filter(u => !/youtu/.test(u)).map(u =>
-            `<a href="${u}" target="_blank">link</a>`).join(" ");
-        const note = e.note ? `<p>${escapeHtml(e.note)}</p>` : "";
-        return `<div class="song-block">
-            ${e.date ? `<p class="meta">${formatDate(e.date)}</p>` : ""}
-            <p>${escapeHtml(e.title)}</p>
-            ${note}
-            ${yt.length ? `<div class="song-videos">${yt.map(u => ytEmbed(youtubeId(u))).join("")}</div>` : ""}
-            ${links}
-        </div>`;
-    }).join("");
+            `<a href="${u}" target="_blank" rel="noopener">link</a>`).join(" ");
+        return `<li><div class="item">
+            <span class="t">${escapeHtml(e.title)}</span><span class="d">${formatDate(e.date)}</span>
+            ${e.note ? `<span class="n">${escapeHtml(e.note)}</span>` : ""}
+            ${yt.length ? `<span class="vids">${yt.map(u => ytEmbed(youtubeId(u))).join("")}</span>` : ""}
+            ${links ? `<span class="n">${links}</span>` : ""}
+        </div></li>`;
+    }).join("") + `</ul>`;
     hookYt(root);
 }
 
-/* --- SCACCHI (progetti / repo) --- */
+/* --- SCACCHI (progetti / repo): la riga e' il link --- */
 function renderScacchi(entries, root) {
-    if (!entries || !entries.length) { root.innerHTML = '<p class="empty">ancora niente qui.</p>'; return; }
+    if (!entries || !entries.length) return vuoto(root);
 
-    root.innerHTML = entries.map(e => {
-        const body = e.body ? `<p>${escapeHtml(e.body)}</p>` : "";
-        const link = e.link
-            ? `<a href="${e.link}" class="repo-link" target="_blank">${escapeHtml(e.link.replace(/^https?:\/\//, ""))} ↗</a>`
-            : "";
-        return `<div class="repo-container">
-            <h2 class="repo-title">${escapeHtml(e.title)}</h2>
-            ${body}
-            ${link}
-        </div>`;
-    }).join("");
+    root.innerHTML = `<ul class="rows">` + entries.map(e => {
+        const url = e.link ? escapeHtml(e.link.replace(/^https?:\/\//, "")) : "";
+        const nota = [e.body ? escapeHtml(e.body) : "", url ? `<span class="url">${url}</span>` : ""].filter(Boolean).join("<br>");
+        const inner = `<span class="t">${escapeHtml(e.title)}</span><span class="d"></span>${nota ? `<span class="n">${nota}</span>` : ""}`;
+        return `<li>${e.link ? `<a class="item" href="${e.link}" target="_blank" rel="noopener">${inner}</a>` : `<div class="item">${inner}</div>`}</li>`;
+    }).join("") + `</ul>`;
 }
 
 /* --- FOTO: singole e in serie ---
    le foto con la stessa "serie" diventano un gruppo (copertina = la prima caricata);
    nell'elenco una serie e' una voce sola, datata alla sua foto piu' recente.
-   foto.html?serie=nome-serie mostra la serie intera. */
-function renderFoto(entries, root) {
-    if (!entries || !entries.length) { root.innerHTML = '<p class="empty">ancora niente qui.</p>'; return; }
+   #foto/nome-serie mostra la serie intera. */
+function renderFoto(entries, root, sect, sub) {
+    if (!entries || !entries.length) return vuoto(root);
 
-    const aperta = new URLSearchParams(location.search).get("serie");
-    if (aperta) {
-        const list = entries.filter(e => e.serie && slug(e.serie) === aperta);
-        root.innerHTML = `<a href="${location.pathname}" class="back">← tutte le foto</a>` + (list.length
+    if (sub) {
+        const list = entries.filter(e => e.serie && slug(e.serie) === sub);
+        root.innerHTML = `<a class="back" href="#${sect}">&larr; tutte le foto</a>` + (list.length
             ? `<h2 class="serie-title">${escapeHtml(list[0].serie)}</h2>
                <div class="foto-grid foto-serie">${list.map((e, i) => fotoItem(e, i, true)).join("")}</div>`
-            : '<p class="empty">questa serie non esiste.</p>');
+            : '<p class="empty-txt">questa serie non esiste.</p>');
         return hookLightbox(root, list);
     }
 
@@ -132,7 +142,7 @@ function renderFoto(entries, root) {
     singole.sort(byDateDesc);
 
     const voci = singole.map((e, i) => ({ date: e.date, html: fotoItem(e, i) }))
-        .concat(Object.keys(serie).map(nome => ({ date: serie[nome].date, html: serieItem(nome, serie[nome].foto) })))
+        .concat(Object.keys(serie).map(nome => ({ date: serie[nome].date, html: serieItem(nome, serie[nome].foto, sect) })))
         .sort(byDateDesc);
     root.innerHTML = `<div class="foto-grid foto-indice">${voci.map(v => v.html).join("")}</div>`;
     hookLightbox(root, singole);
@@ -151,11 +161,11 @@ function fotoItem(e, i, grande) {
     </figure>`;
 }
 
-function serieItem(nome, foto) {
-    const href = `?serie=${slug(nome)}`;
+function serieItem(nome, foto, sect) {
+    const href = `#${sect}/${slug(nome)}`;
     return `<figure class="foto-item">
         <a href="${href}">${fotoImg(foto[0])}</a>
-        <figcaption><a href="${href}">${escapeHtml(nome)}</a> · ${foto.length} foto</figcaption>
+        <figcaption><a href="${href}">${escapeHtml(nome)}</a> &middot; ${foto.length} foto</figcaption>
     </figure>`;
 }
 
@@ -173,6 +183,7 @@ function lightbox(list, i) {
     if (!d) {
         d = document.body.appendChild(document.createElement("dialog"));
         d.id = "lightbox";
+        d.setAttribute("aria-label", "foto");
     }
     const show = j => {
         i = (j + list.length) % list.length;
@@ -197,13 +208,13 @@ function lightbox(list, i) {
    si vede solo la miniatura: il player di YouTube si carica quando premi play
    (pagina piu' leggera, e niente cookie di YouTube finche' non lo avvii) */
 function renderVideo(entries, root) {
-    if (!entries || !entries.length) { root.innerHTML = '<p class="empty">ancora niente qui.</p>'; return; }
+    if (!entries || !entries.length) return vuoto(root);
     const list = entries.slice().sort(byDateDesc);
 
     root.innerHTML = `<div class="video-list">` + list.map(e => `
         <div class="video-item">
             ${ytEmbed(youtubeId(e.youtube))}
-            ${e.title ? `<h2>${escapeHtml(e.title)}</h2>` : ""}
+            <p class="t">${escapeHtml(e.title || "")}</p>
             ${e.date ? `<p class="meta">${formatDate(e.date)}</p>` : ""}
         </div>`).join("") + `</div>`;
     hookYt(root);
@@ -222,7 +233,7 @@ function hookYt(root) {
     root.querySelectorAll("a[data-id]").forEach(a => a.onclick = ev => {
         ev.preventDefault();
         a.outerHTML = `<div class="video-embed"><iframe src="https://www.youtube-nocookie.com/embed/${a.dataset.id}?autoplay=1"
-            allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`;
+            title="video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`;
     });
 }
 
