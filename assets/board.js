@@ -312,21 +312,10 @@ const SPRITES = {
        a ogni caricamento. Buffer riusati, nessuna allocazione per fotogramma. */
     const fondo = document.getElementById("fondo"), fcx = fondo.getContext("2d");
     const ferma = matchMedia("(prefers-reduced-motion: reduce)");
-    const IP = px(INK), PP = px(PAPER), MAX_NUBI = 0.06;
+    const IP = px(INK), PP = px(PAPER);
     const rnd = (a, b) => a + Math.random() * (b - a);
-    let fw = 0, fh = 0, fimg, fdati, fdens, ultimo = 0, tc = 0;
-    let nubi = [], stelle = [], scie = [], deriva = { x: 0, y: 0, ox: 0, oy: 0 };
-
-    /* rumore di valori che si ripete (64x64), generato una volta: da' alle nuvole bordi e nodi irregolari */
-    const RT = new Float32Array(4096).map(Math.random);
-    const RJ = new Float32Array(4096).map(() => Math.random() * 0.6);   // sposta la soglia di Bayer: rompe il reticolo regolare (somma modulo 1 resta uniforme)
-    function ruido(x, y) {
-        const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi;
-        const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
-        const a = RT[(yi & 63) * 64 + (xi & 63)], b = RT[(yi & 63) * 64 + ((xi + 1) & 63)];
-        const c = RT[((yi + 1) & 63) * 64 + (xi & 63)], d = RT[((yi + 1) & 63) * 64 + ((xi + 1) & 63)];
-        return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
-    }
+    let fw = 0, fh = 0, fimg, fdati, ultimo = 0, tc = 0;
+    let stelle = [], scie = [], deriva = { x: 0, y: 0, ox: 0, oy: 0 };
 
     /* punti su una griglia con scarto casuale, mescolati: copertura uniforme senza buchi grandi */
     function celle(n) {
@@ -340,44 +329,20 @@ const SPRITES = {
         fw = Math.ceil(innerWidth / u); fh = Math.ceil(innerHeight / u);
         fondo.width = fw; fondo.height = fh;
         fondo.style.width = fw * u + "px"; fondo.style.height = fh * u + "px";
-        fimg = fcx.createImageData(fw, fh); fdati = new Uint32Array(fimg.data.buffer); fdens = new Float32Array(fw * fh);
+        fimg = fcx.createImageData(fw, fh); fdati = new Uint32Array(fimg.data.buffer);
 
-        const area = innerWidth * innerHeight / (1280 * 900), k = Math.min(1, Math.min(innerWidth, innerHeight) / 600);
+        const area = innerWidth * innerHeight / (1280 * 900);
         const vel = (a, b) => { const v = rnd(a, b) / u, g = rnd(0, 6.2832); return [Math.cos(g) * v, Math.sin(g) * v]; };   // CSS px/s -> punti/s
 
-        /* nuvole: 3-5 (2-3 sui telefoni), grandi e allungate, ciascuna in 3 strati (velo, corpo, nucleo) che scivolano
-           piano uno sull'altro; un solo vento per tutte, scelto a caso a ogni caricamento */
-        const vento = rnd(0, 6.2832), nn = area < 0.6 ? Math.round(rnd(2, 3)) : Math.round(rnd(3, 5));
-        nubi = [];
-        celle(nn).slice(0, nn).forEach(c => {
-            const W = rnd(350, 700) * k / u, sp = rnd(2, 7) / u, ag = vento + rnd(-0.07, 0.07);
-            const lobi = (scala, picco, su) => {
-                /* riga di lobi sovrapposti: grandi al centro, piccoli alle estremita'; la base e' piatta (sfuma sotto la linea) */
-                const nl = 5 + Math.floor(Math.random() * 4), lob = new Float32Array(nl * 3);
-                let ex = 0, ey = 0, rmax = 0;
-                for (let l = 0; l < nl; l++) {
-                    const t = (l + rnd(0.2, 0.8)) / nl * 2 - 1, r = W * scala * (0.12 + 0.13 * (1 - Math.pow(Math.abs(t), 1.5))) * rnd(0.9, 1.1);
-                    lob[l * 3] = t * W * 0.5 * scala; lob[l * 3 + 1] = -0.6 * r + rnd(-0.06, 0.06) * r; lob[l * 3 + 2] = r;
-                    ex = Math.max(ex, Math.abs(lob[l * 3]) + r); ey = Math.max(ey, Math.abs(lob[l * 3 + 1]) + r); rmax = Math.max(rmax, r);
-                }
-                const an = ag + rnd(-0.05, 0.05), vv = sp * rnd(0.8, 1.2), gn = rnd(0, 6.2832);
-                nubi.push({ x: c[0] + rnd(-0.05, 0.05) * W, y: c[1] + su * W, vx: Math.cos(an) * vv, vy: Math.sin(an) * vv, ex, ey, lob, p: picco, hb: rmax * 0.5,
-                            nx: rnd(0, 64), ny: rnd(0, 64), nvx: Math.cos(gn) * 0.25, nvy: Math.sin(gn) * 0.25 });
-            };
-            lobi(1.25, rnd(0.010, 0.015), 0);      // velo: largo e debolissimo
-            lobi(1.0, rnd(0.018, 0.028), 0);         // corpo
-            lobi(0.55, rnd(0.035, 0.045), -0.05);    // nucleo: piccolo, un po' piu' denso, spostato in alto
-        });
-
-        /* stelle: ~55 su 1280x900; 0 punto, 1 croce 3x3, 2 croce 5x5 (centro vuoto o pieno) */
-        stelle = celle(Math.min(80, Math.max(20, Math.round(65 * area)))).map(c => {
+        /* stelle: ~140 su 1280x900; 0 punto, 1 croce 3x3, 2 croce 5x5 (centro vuoto o pieno) */
+        stelle = celle(Math.min(220, Math.max(50, Math.round(140 * area)))).map(c => {
             const q = Math.random();
             return { x: c[0], y: c[1], t: q < 0.65 ? 0 : q < 0.9 ? 1 : 2, vuota: Math.random() < 0.5, lv: 0, fine: 0, prossima: rnd(1, 18) };
         });
         const d = vel(0.2, 1.4); deriva = { x: d[0], y: d[1], ox: 0, oy: 0 };
 
-        /* scie: 3-5 (2-3 sui telefoni); ogni scia sceglie una direzione a caso a ogni comparsa */
-        scie = Array.from({ length: area < 0.6 ? Math.round(rnd(2, 3)) : Math.round(rnd(3, 5)) }, () => {
+        /* scie: 6-9 (4-5 sui telefoni); ogni scia sceglie una direzione a caso a ogni comparsa */
+        scie = Array.from({ length: area < 0.6 ? Math.round(rnd(4, 5)) : Math.round(rnd(6, 9)) }, () => {
             const s = { dx: 1, dy: 0, v: rnd(15, 40) / u, n: Math.round(rnd(10, 36)), pausa: 0, resta: 0, x: 0, y: 0 };
             parti(s, true);
             return s;
@@ -394,17 +359,12 @@ const SPRITES = {
         s.x = primo ? x : x - s.dx * (indietro + 0.5);
         s.y = primo ? y : y - s.dy * (indietro + 0.5);
         s.resta = (primo ? 0 : indietro) + avanti + s.n;      // strada ancora da fare, coda compresa
-        s.pausa = primo ? rnd(0, 5) : rnd(4, 12);              // pausa casuale prima di (ri)apparire
+        s.pausa = primo ? rnd(0, 4) : rnd(2, 7);               // pausa casuale prima di (ri)apparire
     }
 
     function fotogramma(dt, statico) {
         if (!statico) {
             tc += dt;
-            nubi.forEach(n => {
-                n.x += n.vx * dt; n.y += n.vy * dt; n.nx += n.nvx * dt; n.ny += n.nvy * dt;
-                if (n.x < -n.ex) n.x += fw + 2 * n.ex; else if (n.x > fw + n.ex) n.x -= fw + 2 * n.ex;
-                if (n.y < -n.ey) n.y += fh + 2 * n.ey; else if (n.y > fh + n.ey) n.y -= fh + 2 * n.ey;
-            });
             deriva.ox += deriva.x * dt; deriva.oy += deriva.y * dt;
             stelle.forEach(s => {
                 if (s.lv && tc >= s.fine) { s.lv = 0; s.prossima = tc + rnd(6, 20); }
@@ -417,37 +377,7 @@ const SPRITES = {
             });
         }
 
-        /* nuvole: densita' sommata (massimo 12%), poi soglia di Bayer */
-        fdens.fill(0);
-        for (const n of nubi) {
-            const x0 = Math.max(0, Math.floor(n.x - n.ex)), x1 = Math.min(fw - 1, Math.ceil(n.x + n.ex));
-            const y0 = Math.max(0, Math.floor(n.y - n.ey)), y1 = Math.min(fh - 1, Math.ceil(n.y + n.ey + n.hb));
-            const lob = n.lob, nl = lob.length / 3;
-            for (let y = y0; y <= y1; y++) {
-                const dy = y - n.y, sotto = dy > 0 ? Math.max(0, 1 - dy / n.hb) : 1;    // base piatta: sotto la linea la nuvola sfuma
-                if (sotto <= 0) continue;
-                for (let x = x0; x <= x1; x++) {
-                    const dx = x - n.x;
-                    let w = 0;
-                    for (let l = 0; l < nl; l++) {
-                        const ex = dx - lob[l * 3], ey = dy - lob[l * 3 + 1], r2 = lob[l * 3 + 2] * lob[l * 3 + 2], d2 = ex * ex + ey * ey;
-                        if (d2 < r2) { const t = 1 - d2 / r2; w += t * t * (3 - 2 * t); }   // bordo lungo e morbido
-                    }
-                    if (w > 0) {
-                        const q = 0.65 * ruido(dx / 26 + n.nx, dy / 26 + n.ny) + 0.35 * ruido(dx / 10 + n.ny, dy / 10 + n.nx);
-                        const v = Math.min(1, w) * sotto * sotto * (0.3 + 1.4 * q) - 0.02;
-                        if (v > 0) fdens[y * fw + x] += n.p * Math.min(1, v);
-                    }
-                }
-            }
-        }
-        for (let y = 0; y < fh; y++) {
-            const row = BAYER[y % 8];
-            for (let x = 0; x < fw; x++) {
-                const dd = fdens[y * fw + x];
-                fdati[y * fw + x] = dd > 0 && ((row[x % 8] + 0.5) / 64 + RJ[(y & 63) * 64 + (x & 63)]) % 1 < Math.min(dd, MAX_NUBI) ? IP : PP;
-            }
-        }
+        fdati.fill(PP);
 
         /* stelle */
         const acceso = (x, y) => { if (x >= 0 && x < fw && y >= 0 && y < fh) fdati[y * fw + x] = IP; };
@@ -478,19 +408,15 @@ const SPRITES = {
     /* misure: u e sq in modo che ogni punto cada su pixel fisici interi */
     function misura() {
         const dpr = window.devicePixelRatio || 1, tel = telefono.matches;
-        /* lato disponibile: sul telefono solo il margine di sinistra/sotto per lettere e numeri */
-        const lato = tel ? Math.min(innerHeight, innerWidth) - 16 - 2 : Math.min(innerHeight, innerWidth) - 2 * (24 + 16) - 2;
+        /* lato disponibile: sul telefono margini stretti ma uguali ai due lati, cosi' la scacchiera resta centrata */
+        const lato = tel ? Math.min(innerHeight - 32, innerWidth - 24) - 2 : Math.min(innerHeight, innerWidth) - 2 * (24 + 16) - 2;
         const base = lato >= 560 ? 2 : 1;
         u = Math.max(1, Math.round(base * dpr)) / dpr;
         sq = 2 * u * Math.max(1, Math.floor(lato / 8 / (2 * u)));
-        /* etichetta: sul desktop 15px (invariato). Altrove il testo si adatta alla casa: l'etichetta non e' mai piu' larga di una casa
+        /* etichetta: 12px, piccola per non coprire i pezzi; nelle case strette il testo si adatta, cosi' non e' mai piu' larga di una casa
            ("appunti", il nome piu' lungo, e' circa 3,9 volte il corpo del carattere) */
-        let fs = 15, pp = 8, chip = 18;
-        if (base === 1) {
-            fs = Math.floor((sq - 16) / 4);
-            if (fs >= 12) { fs = 12; } else { pp = 2; fs = Math.max(8, Math.min(12, Math.floor((sq - 2 * pp) / 4))); }
-            chip = Math.min(14, fs + 3);
-        }
+        let fs = 12, pp = 5, chip = 14;
+        if (sq < 60) { pp = 2; fs = Math.max(8, Math.min(12, Math.floor((sq - 2 * pp) / 4))); chip = Math.min(14, fs + 3); }
         const ps = 32 * u;
         const pt = Math.max(0, Math.floor((sq - ps - chip) / 2 / u) * u);
         const st = root.style;
@@ -502,25 +428,8 @@ const SPRITES = {
         st.setProperty("--pt", pt + "px");
         punti();
         fondoMisura();
-        etichette();
     }
 
-    /* se due etichette (o un'etichetta e un altro pezzo) si sovrappongono, quella dopo scende di un'altezza */
-    function etichette() {
-        const els = nodi.map(n => pezzi[n.k]), occupato = [];
-        const tocca = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
-        els.forEach(el => el.style.setProperty("--dy", "0px"));
-        els.forEach(el => {
-            const nome = el.querySelector(".nome"), chip = nome.offsetHeight;
-            const altri = els.filter(x => x !== el).map(x => x.querySelector(".pc").getBoundingClientRect());
-            for (const dy of [0, chip, 2 * chip]) {
-                el.style.setProperty("--dy", dy + "px");
-                const r = nome.getBoundingClientRect();
-                if (!occupato.some(o => tocca(r, o)) && !altri.some(a => tocca(r, a))) break;
-            }
-            occupato.push(nome.getBoundingClientRect());
-        });
-    }
     let raf;
     addEventListener("resize", () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(misura); });
 

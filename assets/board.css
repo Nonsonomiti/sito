@@ -78,7 +78,7 @@ body.desk {
 /* il nome: un'etichetta piena, sempre visibile */
 .nome {
     position: absolute; left: 50%; bottom: var(--pt);
-    transform: translate(-50%, var(--dy, 0px));
+    transform: translateX(-50%);
     height: var(--chip); padding: 0 var(--pp);
     line-height: var(--chip); white-space: nowrap;
     background: var(--paper); color: var(--ink);
@@ -245,7 +245,8 @@ body.desk {
 /* ---------- telefono: finestre a tutto schermo, una alla volta ---------- */
 @media (max-width: 720px) {
     body.desk { --cw: 16px; }
-    .frame { grid-template: 0 auto var(--cw) / var(--cw) auto 0; }
+    .frame { grid-template: var(--cw) auto var(--cw) / 12px auto 12px; }
+    .ranks span { padding: 0 2px; }
     .frame { font-size: 12px; }
     .win { inset: 0 !important; width: auto !important; height: auto !important; border-width: 0; box-shadow: none; z-index: 20 !important; }
     .titlebar { height: 40px; }
